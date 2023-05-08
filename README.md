@@ -10,13 +10,13 @@ So, the input parameter for the system is Distance object ahead and Speed of the
 
 System using this schematic
 
-![schematic](Schematic.png)
+![schematic](images/Schematic.png)
 
 ---
 ## Fuzzy Logic
 
 The fuzzy logic on this project based on table below 
-![fuzzy](FuzzyLogic.jpg)
+![fuzzy](images/FuzzyLogic.jpg)
 
 The Coloumn reprsent the distance and Row represent the speed. Table show the output of buzzer based on **AND** Condition of the Fuzzy logic from the input.
 
