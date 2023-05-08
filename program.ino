@@ -25,6 +25,9 @@ int speedKMH = 0;
 //OUPUT PWM FROM FUZZY OUTPUT
 int pwmBuzzer = 0;
 
+//FOR Timer LCD
+unsigned long lcdTimer;
+
 //DEFINE FUNCTION
 void interupsi();
 int buzzer_trig();
@@ -127,6 +130,8 @@ void setLCD() {
   lcd.print("SPD:    PWM:");
   lcd.setCursor(0, 1);
   lcd.print("DIS:    STS:");
+  //Start LCD Timer
+  lcdTimer = millis()
 }
 
 void addSpaces(int x) {
@@ -135,28 +140,29 @@ void addSpaces(int x) {
 }
 
 void updateLCD() {
-  //Print SPEED Value in LCD
-  // speedKMH+=2; // FOR TEST
-  lcd.setCursor(4, 0);
-  lcd.print(speedKMH);
-  addSpaces(speedKMH);
+  // Update LCD every 1 second without delay
+  if(millis() - lcdTimer >= 1000){ 
+    lcdTimer = millis();
+    //Print SPEED Value in LCD
+    lcd.setCursor(4, 0);
+    lcd.print(speedKMH);
+    addSpaces(speedKMH);
 
-  //PRINT PWM Value in LCD
-  // pwmBuzzer > 255 ? pwmBuzzer=0 : pwmBuzzer+=50; // FOR TEST
-  lcd.setCursor(12, 0);
-  lcd.print(pwmBuzzer);
-  addSpaces(pwmBuzzer);
+    //PRINT PWM Value in LCD
+    lcd.setCursor(12, 0);
+    lcd.print(pwmBuzzer);
+    addSpaces(pwmBuzzer);
 
-  //PRINT DIS Valuein LCD
-  // distance+=7; // FOR TEST
-  lcd.setCursor(4, 1);
-  lcd.print(int(distance));
-  addSpaces(int(distance));
+    //PRINT DIS Valuein LCD
+    lcd.setCursor(4, 1);
+    lcd.print(int(distance));
+    addSpaces(int(distance));
 
-  //PRINT Status Value in LCD
-  lcd.setCursor(12, 1);
-  lcd.print(buzzerStatus[getStatus()]);
-  delay(1000);  // FOR TEST
+    //PRINT Status Value in LCD
+    lcd.setCursor(12, 1);
+    lcd.print(buzzerStatus[getStatus()]);
+  }
+  return;
 }
 
 int getStatus() {
