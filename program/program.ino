@@ -12,11 +12,12 @@ int buzzer = 6;
 int speedIntPin = 2;
 
 //VARIABLE to Count SPEED
-float REV = 0;
+int REV = 0;
 int RPM_VALUE;
 unsigned long PREVIOUS = 0;
 int TIME;
-float kelilingRoda = 0.7;  //1.57 ; //in Meter
+// float kelilingRoda = 0.7;  //1.57 ; //in Meter
+float jariJari = 0.3;
 
 //OUTPUT VARIABLE AND FUZZY INPUT
 float distance = 0;
@@ -58,14 +59,17 @@ void setup() {
   lcd.print("Hello There!!!");
   delay(2500);
   setLCD();
-  Serial.println("START");
+  // Serial.println("START");
 }
 
 void loop() {
+  // unsigned long startTime = millis();
   distance = getDistance();
-  speedKMH = getSpeed();
+  getSpeed();
   pwmBuzzer = buzzer_trig();
   updateLCD();
+  // int testTime = millis() - startTime;
+  // Serial.println(testTime);
 }
 
 
@@ -74,8 +78,8 @@ int buzzer_trig() {
   fuzzyData fuzzy(speedKMH, distance);
   analogWrite(buzzer, fuzzy.output);
 
-  Serial.print("OUTPUT VALUE : ");
-  Serial.println(fuzzy.output);
+  // Serial.print("OUTPUT VALUE : ");
+  // Serial.println(fuzzy.output);
 
   return fuzzy.output;
 }
@@ -83,6 +87,8 @@ int buzzer_trig() {
 void interupsi() {
   //INT USED FOR getDistance();
   REV++;
+  // Serial.println(REV);
+  // Serial.println("INT");
 }
 
 float getDistance() {
@@ -95,30 +101,32 @@ float getDistance() {
   long echotime = pulseIn(echo_pin, HIGH);
   float distance = echotime * 0.0343 / 2;  //in CM
 
-  Serial.print("Distance : ");
-  Serial.print(distance);
-  Serial.println(" cm");
+  // Serial.print("Distance : ");
+  // Serial.print(distance);
+  // Serial.println(" cm");
 
   return distance;
 }
 
-int getSpeed() {
+void getSpeed() {
   detachInterrupt(0);  // STOP Interrupt Process When Count Speed
   TIME = millis() - PREVIOUS;
+  Serial.println(REV);
+  Serial.println(TIME);
   RPM_VALUE = (REV / TIME) * 60000;
   PREVIOUS = millis();
   REV = 0;
 
-  int speed = (kelilingRoda * RPM_VALUE * 60) / 1000;  //COUNT SPEED in Km/H
+  speedKMH = ((jariJari * 2 * 3.14) * RPM_VALUE * 60) / 1000;  //COUNT SPEED in Km/H
+  // speedKMH = (2 * jariJari) * RPM_VALUE * 0.1885;
 
   Serial.print("RPM : ");
   Serial.println(RPM_VALUE);
 
   Serial.print("Speed : ");
   Serial.println(speedKMH);
-
   attachInterrupt(digitalPinToInterrupt(speedIntPin), interupsi, FALLING);  // START INTERRUPT
-  return speed;
+  delay(1000);
 }
 
 void setLCD() {
@@ -135,13 +143,14 @@ void setLCD() {
 }
 
 void addSpaces(int x) {
+  if (x < 1000) lcd.print(' ');
   if (x < 100) lcd.print(' ');
   if (x < 10 && x >= 0) lcd.print(' ');
 }
 
 void updateLCD() {
   // Update LCD every 1 second without delay
-  if(millis() - lcdTimer >= 1000){ 
+  if (millis() - lcdTimer >= 1000) {
     lcdTimer = millis();
     //Print SPEED Value in LCD
     lcd.setCursor(4, 0);
