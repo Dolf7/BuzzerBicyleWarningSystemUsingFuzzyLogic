@@ -131,7 +131,7 @@ void setLCD() {
   lcd.setCursor(0, 1);
   lcd.print("DIS:    STS:");
   //Start LCD Timer
-  lcdTimer = millis()
+  lcdTimer = millis();
 }
 
 void addSpaces(int x) {
