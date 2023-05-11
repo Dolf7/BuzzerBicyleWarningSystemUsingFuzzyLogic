@@ -7,7 +7,7 @@ int awalKeceptanCepat = 30;
 
 float valueKecepatanLambat(int speed)
 {
-    if (speed <= batasKecepatanLambat)
+    if (speed <= batasKecepatanLambat && speed > 0)
         return 1;
     else if (speed > batasKecepatanLambat && speed < puncakKecepatanSedang)
     {
@@ -49,7 +49,7 @@ int awalJarakJauh = 350;
 
 float valueJarakDekat(int jarak)
 {
-    if (jarak <= batasJarakDekat)
+    if (jarak <= batasJarakDekat && jarak > 0)
         return 1;
     else if (jarak > batasJarakDekat && jarak < puncakJarakSedang)
     {

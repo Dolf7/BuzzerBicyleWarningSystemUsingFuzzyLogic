@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <LiquidCrystal_I2C.h>
+#include <TimerOne.h>
 #include "fuzzy.h"
 
 // set the LCD address to 0x3F for a 16 chars and 2 line display
@@ -12,12 +13,20 @@ int buzzer = 6;
 int speedIntPin = 2;
 
 //VARIABLE to Count SPEED
-int REV = 0;
-int RPM_VALUE;
+float REV = 0;
+float RPM_VALUE;
 unsigned long PREVIOUS = 0;
 int TIME;
-// float kelilingRoda = 0.7;  //1.57 ; //in Meter
-float jariJari = 0.3;
+float kelilingRoda = 0.55;  //1.57 ; //in Meter
+
+float arr_speed[3] = {0, 0};
+
+float arr_input(float x){
+  arr_speed[0] = arr_speed[1];
+  arr_speed[1] = x;
+
+  return (arr_speed[0] + arr_speed[1])/2; 
+}
 
 //OUTPUT VARIABLE AND FUZZY INPUT
 float distance = 0;
@@ -52,24 +61,25 @@ void setup() {
   pinMode(echo_pin, INPUT);
   pinMode(buzzer, OUTPUT);
   pinMode(speedIntPin, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(speedIntPin), interupsi, RISING);
   digitalWrite(trig_pin, LOW);
+
+  Timer1.initialize(1000000);
+  attachInterrupt(digitalPinToInterrupt(speedIntPin), interupsi, RISING);
+  Timer1.attachInterrupt( getSpeed );
+
 
   lcd.setCursor(2, 0);  //Set cursor to character 2 on line 0
   lcd.print("Hello There!!!");
   delay(2500);
   setLCD();
-  // Serial.println("START");
+  Serial.println("START");
 }
 
 void loop() {
-  // unsigned long startTime = millis();
   distance = getDistance();
-  getSpeed();
+  // speedKMH = getSpeed();
   pwmBuzzer = buzzer_trig();
   updateLCD();
-  // int testTime = millis() - startTime;
-  // Serial.println(testTime);
 }
 
 
@@ -78,8 +88,8 @@ int buzzer_trig() {
   fuzzyData fuzzy(speedKMH, distance);
   analogWrite(buzzer, fuzzy.output);
 
-  // Serial.print("OUTPUT VALUE : ");
-  // Serial.println(fuzzy.output);
+  Serial.print("OUTPUT VALUE : ");
+  Serial.println(fuzzy.output);
 
   return fuzzy.output;
 }
@@ -87,8 +97,6 @@ int buzzer_trig() {
 void interupsi() {
   //INT USED FOR getDistance();
   REV++;
-  // Serial.println(REV);
-  // Serial.println("INT");
 }
 
 float getDistance() {
@@ -101,32 +109,35 @@ float getDistance() {
   long echotime = pulseIn(echo_pin, HIGH);
   float distance = echotime * 0.0343 / 2;  //in CM
 
-  // Serial.print("Distance : ");
-  // Serial.print(distance);
-  // Serial.println(" cm");
+  Serial.print("Distance : ");
+  Serial.print(distance);
+  Serial.println(" cm");
 
   return distance;
 }
 
 void getSpeed() {
   detachInterrupt(0);  // STOP Interrupt Process When Count Speed
+  //  Timer1.detachInterrupt();
+  REV = REV/4;
   TIME = millis() - PREVIOUS;
-  Serial.println(REV);
-  Serial.println(TIME);
   RPM_VALUE = (REV / TIME) * 60000;
   PREVIOUS = millis();
+  // Serial.print("Rotation : ");
+  // Serial.println(REV, DEC);
   REV = 0;
 
-  speedKMH = ((jariJari * 2 * 3.14) * RPM_VALUE * 60) / 1000;  //COUNT SPEED in Km/H
-  // speedKMH = (2 * jariJari) * RPM_VALUE * 0.1885;
+  float speed = (3.14 * kelilingRoda * RPM_VALUE * 60) / 1000;  //COUNT SPEED in Km/H
+  speedKMH = arr_input(speed);
 
-  Serial.print("RPM : ");
-  Serial.println(RPM_VALUE);
+  // Serial.print("RPM : ");
+  // Serial.println(RPM_VALUE, DEC);
 
   Serial.print("Speed : ");
   Serial.println(speedKMH);
-  attachInterrupt(digitalPinToInterrupt(speedIntPin), interupsi, FALLING);  // START INTERRUPT
-  delay(1000);
+
+  attachInterrupt(digitalPinToInterrupt(speedIntPin), interupsi, RISING);  // START INTERRUPT
+  // Timer1.attachInterrupt( getSpeed );  
 }
 
 void setLCD() {
@@ -143,14 +154,13 @@ void setLCD() {
 }
 
 void addSpaces(int x) {
-  if (x < 1000) lcd.print(' ');
   if (x < 100) lcd.print(' ');
   if (x < 10 && x >= 0) lcd.print(' ');
 }
 
 void updateLCD() {
   // Update LCD every 1 second without delay
-  if (millis() - lcdTimer >= 1000) {
+  if(millis() - lcdTimer >= 1000){ 
     lcdTimer = millis();
     //Print SPEED Value in LCD
     lcd.setCursor(4, 0);
@@ -171,6 +181,7 @@ void updateLCD() {
     lcd.setCursor(12, 1);
     lcd.print(buzzerStatus[getStatus()]);
   }
+  delay(250);
   return;
 }
 
@@ -179,6 +190,6 @@ int getStatus() {
   else if (pwmBuzzer >= 51 && pwmBuzzer < 102) return 2;   // 51 - 101 Sedang
   else if (pwmBuzzer >= 102 && pwmBuzzer < 153) return 3;  // 102 - 152 Agak Kuat
   else if (pwmBuzzer >= 153 && pwmBuzzer < 204) return 4;  // 153 - 203 Kuat
-  else if (pwmBuzzer >= 204 && pwmBuzzer < 255) return 5;  // 204 - 255 Sangat Kuat
+  else if (pwmBuzzer >= 204 && pwmBuzzer <= 255) return 5;  // 204 - 255 Sangat Kuat
   return 0;                                                // 0 or Other MATI
 }
